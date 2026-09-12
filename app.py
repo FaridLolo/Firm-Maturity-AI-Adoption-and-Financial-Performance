@@ -177,7 +177,7 @@ st.markdown(
 st.markdown(
     """
     <div class="app-header">
-        <div class="app-badge">FINNISH SERVICE FIRMS · 2021–2023 PANEL DATA</div>
+        <div class="app-badge">SERVICE FIRMS · 2021–2023 PANEL DATA · PUBLIC DEMO</div>
         <h1>📈 Firm Maturity, AI Adoption &amp; Financial Performance</h1>
         <p>An interactive research dashboard linking AI adoption and organizational maturity
         to ROA, ROE and financial risk — built for panel-data analysis.</p>
@@ -189,7 +189,7 @@ st.markdown(
 # ============================================================================
 # DATA LOADING
 # ============================================================================
-DEFAULT_PATH = "data.csv"
+DEFAULT_PATH = "sample_data.csv"
 
 
 def clean_columns(df: pd.DataFrame) -> pd.DataFrame:
@@ -225,21 +225,43 @@ def load_data(file) -> pd.DataFrame:
 
 
 st.sidebar.markdown("### 📁 Data source")
-uploaded = st.sidebar.file_uploader("Upload data.csv", type=["csv"])
+uploaded = st.sidebar.file_uploader(
+    "Upload your own CSV (optional)",
+    type=["csv"],
+    help=(
+        "Use this to explore your own private/licensed dataset (e.g. an ORBIS export). "
+        "It is processed only in this browser session's memory and is never saved to "
+        "the app's repository or disk."
+    ),
+)
 
 df = None
+using_sample = False
 if uploaded is not None:
     df = load_data(uploaded)
-    st.sidebar.success("File uploaded successfully.")
+    st.sidebar.success("Your file was loaded for this session only.")
 else:
     try:
         df = load_data(DEFAULT_PATH)
-        st.sidebar.info(f"Loaded default file: `{DEFAULT_PATH}`")
+        using_sample = True
+        st.sidebar.info("Showing built-in **sample/demo data** (synthetic).")
     except FileNotFoundError:
-        st.sidebar.warning("No `data.csv` found next to the app. Please upload a CSV file.")
+        st.sidebar.warning(f"No `{DEFAULT_PATH}` found next to the app. Please upload a CSV file.")
 
 if df is None:
     st.stop()
+
+if using_sample:
+    st.info(
+        "🧪 **This is a public demo running on synthetically generated sample data** — "
+        "not the real, licensed ORBIS dataset used in the underlying thesis. Company names, "
+        "financials and ratios below are fabricated for demonstration purposes only, though "
+        "they are generated to broadly mirror the same statistical relationships discussed "
+        "in the study (AI adoption, firm maturity, ROA/ROE, risk). "
+        "To analyze your own data, use the uploader in the sidebar — your file stays private "
+        "to your browser session and is never stored on the server.",
+        icon="🧪",
+    )
 
 numeric_cols = [c for c in df.select_dtypes(include=[np.number]).columns]
 
@@ -468,6 +490,15 @@ with tab2:
 # TAB 3 — METHODOLOGY & REFERENCES
 # ----------------------------------------------------------------------------
 with tab3:
+    if using_sample:
+        st.warning(
+            "The methodology below describes the **real research design** of the underlying "
+            "thesis. This public demo, however, currently displays **synthetic sample data** "
+            "(see the notice at the top of the page) — the licensed ORBIS dataset itself is "
+            "not published here.",
+            icon="⚠️",
+        )
+
     st.subheader("Methodology")
     st.markdown(
         f"""
